@@ -38,6 +38,9 @@ var TOO_MANY_POINTS = require('./constants').TOO_MANY_POINTS;
 var DESELECTDIM = require('../../constants/interactions').DESELECTDIM;
 
 function calc(gd, trace) {
+
+    console.log("calc is called...");
+
     var fullLayout = gd._fullLayout;
     var xa = AxisIDs.getFromId(gd, trace.xaxis);
     var ya = AxisIDs.getFromId(gd, trace.yaxis);
@@ -147,9 +150,18 @@ function expandForErrorBars(trace, ax, opts) {
 
 // create scene options
 function sceneOptions(gd, subplot, trace, positions, x, y) {
+
+    // console.log("sceneOptions is called...");
+
+    // console.log("gd=", gd);
+    // console.log("trace=", trace);
+
     var opts = convert.style(gd, trace);
 
+    // console.log("opts=", opts);
+
     if(opts.marker) {
+        // console.log("positions added!");
         opts.marker.positions = positions;
     }
 
@@ -161,6 +173,9 @@ function sceneOptions(gd, subplot, trace, positions, x, y) {
     }
 
     if(opts.errorX || opts.errorY) {
+        // console.log("opts.errorX=", opts.errorX);
+        // console.log("opts.errorY=", opts.errorY);
+
         var errors = convert.errorBarPositions(gd, trace, positions, x, y);
 
         if(opts.errorX) {
@@ -345,7 +360,12 @@ function getViewport(fullLayout, xaxis, yaxis) {
 }
 
 function plot(gd, subplot, cdata) {
-    if(!cdata.length) return;
+
+    console.log("plot...");
+    if(!cdata.length) {
+        console.log("exit plot!");
+        return;
+    }
 
     var fullLayout = gd._fullLayout;
     var scene = subplot._scene;
@@ -370,6 +390,7 @@ function plot(gd, subplot, cdata) {
     if(scene.dirty) {
         // make sure scenes are created
         if(scene.error2d === true) {
+            // console.log("Creating Error!");
             scene.error2d = createError(regl);
         }
         if(scene.line2d === true) {
@@ -655,6 +676,7 @@ function plot(gd, subplot, cdata) {
         scene.line2d.update(vpRange);
     }
     if(scene.error2d) {
+        console.log("vpRange=", vpRange);
         scene.error2d.update(vpRange.concat(vpRange));
     }
     if(scene.scatter2d) {

@@ -1593,7 +1593,7 @@ function _restyle(gd, aobj, traces) {
             param.set(Array.isArray(vi) ? vi[0] : vi);
             // ironically, the layout attrs in restyle only require replot,
             // not relayout
-            flags.calc = true;
+            { console.log("CALC set 1"); flags.calc = true; }
             continue;
         }
 
@@ -1702,7 +1702,7 @@ function _restyle(gd, aobj, traces) {
             else if(Plots.dataArrayContainers.indexOf(param.parts[0]) !== -1) {
                 // TODO: use manageArrays.applyContainerArrayChanges here too
                 helpers.manageArrayContainers(param, newVal, undoit);
-                flags.calc = true;
+                { console.log("CALC set 1"); flags.calc = true; }
             }
             else {
                 if(valObject) {
@@ -1712,7 +1712,7 @@ function _restyle(gd, aobj, traces) {
                         !Registry.traceIs(contFull, 'regl') &&
                         (Lib.isArrayOrTypedArray(newVal) || Lib.isArrayOrTypedArray(oldVal))
                     ) {
-                        flags.calc = true;
+                        { console.log("CALC set 1"); flags.calc = true; }
                     }
                     else editTypes.update(flags, valObject);
                 }
@@ -1723,7 +1723,7 @@ function _restyle(gd, aobj, traces) {
                      * some other edits too, so the modules we're
                      * looking at don't have these attributes in them.
                      */
-                    flags.calc = true;
+                    { console.log("CALC set 1"); flags.calc = true; }
                 }
 
                 // all the other ones, just modify that one attribute
@@ -2238,7 +2238,7 @@ function _relayout(gd, aobj) {
                 parentIn.range = [1, 0];
             }
 
-            if(parentFull.autorange) flags.calc = true;
+            if(parentFull.autorange) { console.log("CALC set 1"); flags.calc = true; }
             else flags.plot = true;
         }
         else {
@@ -2250,7 +2250,7 @@ function _relayout(gd, aobj) {
                 flags.plot = true;
             }
             else if(valObject) editTypes.update(flags, valObject);
-            else flags.calc = true;
+            else { console.log("CALC set 1"); flags.calc = true; }
 
             p.set(vi);
         }
@@ -2274,7 +2274,7 @@ function _relayout(gd, aobj) {
                 // specifying arbitrary ranges for all axes in the group.
                 // this way some ranges may expand beyond what's specified,
                 // as they do at first draw, to satisfy the constraints.
-                flags.calc = true;
+                { console.log("CALC set 1"); flags.calc = true; }
                 for(var groupAxId in group) {
                     if(!rangesAltered[groupAxId]) {
                         Axes.getFromId(gd, groupAxId)._constraintShrinkable = true;
@@ -2673,6 +2673,8 @@ function applyUIRevisions(data, layout, oldFullData, oldFullLayout) {
 exports.react = function(gd, data, layout, config) {
     var frames, plotDone;
 
+    console.log("react is called...");
+
     function addFrames() { return exports.addFrames(gd, frames); }
 
     gd = Lib.getGraphDiv(gd);
@@ -2682,9 +2684,12 @@ exports.react = function(gd, data, layout, config) {
 
     // you can use this as the initial draw as well as to update
     if(!Lib.isPlotDiv(gd) || !oldFullData || !oldFullLayout) {
+        console.log("pos: 1");
+
         plotDone = exports.newPlot(gd, data, layout, config);
     }
     else {
+        console.log("pos: 2");
 
         if(Lib.isPlainObject(data)) {
             var obj = data;
@@ -2693,6 +2698,8 @@ exports.react = function(gd, data, layout, config) {
             config = obj.config;
             frames = obj.frames;
         }
+
+        console.log("pos: 3");
 
         var configChanged = false;
         // assume that if there's a config at all, we're reacting to it too,
@@ -2704,10 +2711,14 @@ exports.react = function(gd, data, layout, config) {
             configChanged = diffConfig(oldConfig, gd._context);
         }
 
+        console.log("pos: 4");
+
         gd.data = data || [];
         helpers.cleanData(gd.data);
         gd.layout = layout || {};
         helpers.cleanLayout(gd.layout);
+
+        console.log("pos: 5");
 
         applyUIRevisions(gd.data, gd.layout, oldFullData, oldFullLayout);
 
@@ -2716,11 +2727,18 @@ exports.react = function(gd, data, layout, config) {
         // if the diff (which we haven't determined yet) says we'll recalc
         Plots.supplyDefaults(gd, {skipUpdateCalc: true});
 
+        console.log("pos: 6");
+
         var newFullData = gd._fullData;
         var newFullLayout = gd._fullLayout;
         var immutable = newFullLayout.datarevision === undefined;
 
+        console.log("pos: 7");
+
         var restyleFlags = diffData(gd, oldFullData, newFullData, immutable);
+
+        console.log("pos: 8");
+
         var relayoutFlags = diffLayout(gd, oldFullLayout, newFullLayout, immutable);
 
         // TODO: how to translate this part of relayout to Plotly.react?
@@ -2732,6 +2750,8 @@ exports.react = function(gd, data, layout, config) {
         //     fullLayout[ai] = gd._initialAutoSize[ai];
         // }
 
+        console.log("pos: 9");
+
         if(updateAutosize(gd)) relayoutFlags.layoutReplot = true;
 
         // clear calcdata if required
@@ -2739,17 +2759,27 @@ exports.react = function(gd, data, layout, config) {
         // otherwise do the calcdata updates and calcTransform array remaps that we skipped earlier
         else Plots.supplyDefaultsUpdateCalc(gd.calcdata, newFullData);
 
+        console.log("pos: 10");
+
         // Note: what restyle/relayout use impliedEdits and clearAxisTypes for
         // must be handled by the user when using Plotly.react.
 
         // fill in redraw sequence
         var seq = [];
 
+        console.log("pos: 11");
+
         if(frames) {
             gd._transitionData = {};
             Plots.createTransitionData(gd);
             seq.push(addFrames);
         }
+
+        console.log("pos: 12");
+
+        console.log("restyleFlags.fullReplot=", restyleFlags.fullReplot);
+        console.log("relayoutFlags.layoutReplot=", relayoutFlags.layoutReplot);
+        console.log("configChanged=", configChanged);
 
         if(restyleFlags.fullReplot || relayoutFlags.layoutReplot || configChanged) {
             gd._fullLayout._skipDefaults = true;
@@ -2787,11 +2817,28 @@ exports.react = function(gd, data, layout, config) {
             seq.push(emitAfterPlot);
         }
 
+        console.log("pos: 13");
+
         seq.push(Plots.rehover);
 
+        console.log("pos: 14");
+
+        console.log("seq=", seq);
+        console.log("gd=", gd);
+
         plotDone = Lib.syncOrAsync(seq, gd);
-        if(!plotDone || !plotDone.then) plotDone = Promise.resolve(gd);
+
+        console.log("pos: 15");
+
+        if(!plotDone || !plotDone.then) {
+            console.log("pos: 16");
+            plotDone = Promise.resolve(gd);
+        }
+
+        console.log("pos: 17");
     }
+
+    console.log("pos: 18");
 
     return plotDone.then(function() {
         gd.emit('plotly_react', {
@@ -2805,7 +2852,15 @@ exports.react = function(gd, data, layout, config) {
 };
 
 function diffData(gd, oldFullData, newFullData, immutable) {
+
+    console.log("diffData is called...");
+
+    console.log("immutable=", immutable);
+
     if(oldFullData.length !== newFullData.length) {
+
+        console.log("CASE 1");
+
         return {
             fullReplot: true,
             calc: true
@@ -2813,6 +2868,9 @@ function diffData(gd, oldFullData, newFullData, immutable) {
     }
 
     var flags = editTypes.traceFlags();
+
+    console.log("flags.calc=", flags.calc);
+
     flags.arrays = {};
     var i, trace;
 
@@ -2837,9 +2895,16 @@ function diffData(gd, oldFullData, newFullData, immutable) {
         seenUIDs[trace.uid] = 1;
 
         getDiffFlags(oldFullData[i]._fullInput, trace, [], diffOpts);
+
+        console.log("flags.calc=", flags.calc);
     }
 
+    console.log("flags.calc=", flags.calc);
+    console.log("flags.plot=", flags.plot);
+
     if(flags.calc || flags.plot) {
+        console.log("CASE 2");
+
         flags.fullReplot = true;
     }
 
@@ -2871,6 +2936,9 @@ function diffLayout(gd, oldFullLayout, newFullLayout, immutable) {
 }
 
 function getDiffFlags(oldContainer, newContainer, outerparts, opts) {
+
+    console.log("getDiffFlags is called ...");
+
     var valObject, key;
 
     var getValObject = opts.getValObject;
@@ -2880,6 +2948,9 @@ function getDiffFlags(oldContainer, newContainer, outerparts, opts) {
     var arrayIndex = opts.arrayIndex;
 
     function changed() {
+
+        console.log("changed is called!");
+
         var editType = valObject.editType;
         if(inArray && editType.indexOf('arraydraw') !== -1) {
             Lib.pushUnique(flags.arrays[inArray], arrayIndex);
@@ -2924,9 +2995,18 @@ function getDiffFlags(oldContainer, newContainer, outerparts, opts) {
         var valType = valObject.valType;
         var i;
 
+        console.log("key=", key);
+        console.log("parts=", parts);
+        console.log("valObject=", valObject);
+
         var canBeDataArray = valObjectCanBeDataArray(valObject);
         var wasArray = Array.isArray(oldVal);
         var nowArray = Array.isArray(newVal);
+
+        //console.log("canBeDataArray=", canBeDataArray);
+        //console.log("wasArray=", wasArray);
+        //console.log("nowArray=", nowArray);
+
 
         // hack for traces that modify the data in supplyDefaults, like
         // converting 1D to 2D arrays, which will always create new objects
@@ -2938,7 +3018,7 @@ function getDiffFlags(oldContainer, newContainer, outerparts, opts) {
         }
 
         if(newVal === undefined) {
-            if(canBeDataArray && wasArray) flags.calc = true;
+            if(canBeDataArray && wasArray) { console.log("CALC set 1"); flags.calc = true; }
             else changed();
         }
         else if(valObject._isLinkedToArray) {
@@ -2982,11 +3062,11 @@ function getDiffFlags(oldContainer, newContainer, outerparts, opts) {
                 // don't try to diff two data arrays. If immutable we know the data changed,
                 // if not, assume it didn't and let `layout.datarevision` tell us if it did
                 if(immutable) {
-                    flags.calc = true;
+                    { console.log("CALC set 2"); flags.calc = true; }
                 }
             }
             else if(wasArray !== nowArray) {
-                flags.calc = true;
+                { console.log("CALC set 3"); flags.calc = true; }
             }
             else changed();
         }
@@ -3009,7 +3089,7 @@ function getDiffFlags(oldContainer, newContainer, outerparts, opts) {
             valObject = getValObject(outerparts.concat(key));
 
             if(valObjectCanBeDataArray(valObject) && Array.isArray(newContainer[key])) {
-                flags.calc = true;
+                { console.log("CALC set 4"); flags.calc = true; }
                 return;
             }
             else changed();
