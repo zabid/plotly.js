@@ -35,7 +35,7 @@ var SUBPLOT_PATTERN = require('../cartesian/constants').SUBPLOT_PATTERN;
 function Scene2D(options, fullLayout) {
     this.container = options.container;
     this.graphDiv = options.graphDiv;
-    this.pixelRatio = options.plotGlPixelRatio || window.devicePixelRatio;
+    this.pixelRatio = options.plotGlPixelRatio || 1;
     this.id = options.id;
     this.staticPlot = !!options.staticPlot;
     this.scrollZoom = this.graphDiv._context._scrollZoom.cartesian;
@@ -52,7 +52,13 @@ function Scene2D(options, fullLayout) {
 
     // create the plot
     this.glplot = createPlot2D(this.glplotOptions);
-
+/*
+    // double pixelRatio when antialias is not enabled by the system
+    if(this.glplot.gl.getContextAttributes().antialias !== true) {
+        this.pixelRatio *= 2;
+        this.glplot.pixelRatio = this.pixelRatio;
+    }
+*/
     // create camera
     this.camera = createCamera(this);
 
@@ -118,7 +124,8 @@ proto.makeFramework = function() {
         var gl = getContext({
             canvas: liveCanvas,
             preserveDrawingBuffer: true,
-            premultipliedAlpha: true
+            premultipliedAlpha: true,
+            antialias: true
         });
 
         if(!gl) {
