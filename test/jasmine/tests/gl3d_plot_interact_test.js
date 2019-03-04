@@ -35,7 +35,8 @@ describe('Test gl3d before/after plot', function() {
         destroyGraphDiv();
     });
 
-    it('@noCI @gl should not rotate camera on the very first click before scene is complete and then should rotate', function(done) {
+    it('@gl should not rotate camera on the very first click before scene is complete and then should rotate', function(done) {
+        var timeDelay = 200;
         var _mock = Lib.extendDeep(
             {
                 layout: {
@@ -68,17 +69,17 @@ describe('Test gl3d before/after plot', function() {
 
         function _stayThere() {
             mouseEvent('mousemove', x, y);
-            return delay(20)();
+            return delay(timeDelay)();
         }
 
         function _clickThere() {
             mouseEvent('mouseover', x, y, {buttons: 1});
-            return delay(20)();
+            return delay(timeDelay)();
         }
 
         function _clickOtherplace() {
             mouseEvent('mouseover', 300, 300, {buttons: 1});
-            return delay(20)();
+            return delay(timeDelay)();
         }
 
         _stayThere()
@@ -86,7 +87,7 @@ describe('Test gl3d before/after plot', function() {
             gd = createGraphDiv();
             return Plotly.plot(gd, _mock);
         })
-        .then(delay(20))
+        .then(delay(timeDelay))
         .then(function() {
             var cameraIn = gd._fullLayout.scene.camera;
             expect(cameraIn.up.x).toEqual(0, 'cameraIn.up.x');
@@ -99,7 +100,7 @@ describe('Test gl3d before/after plot', function() {
             expect(cameraIn.eye.y).toEqual(1.2, 'cameraIn.eye.y');
             expect(cameraIn.eye.z).toEqual(1.2, 'cameraIn.eye.z');
         })
-        .then(delay(20))
+        .then(delay(timeDelay))
         .then(function() {
             var cameraBefore = gd._fullLayout.scene._scene.glplot.camera;
             expect(cameraBefore.up[0]).toBeCloseTo(0, 2, 'cameraBefore.up[0]');
@@ -114,7 +115,7 @@ describe('Test gl3d before/after plot', function() {
             expect(cameraBefore.mouseListener.enabled === true);
         })
         .then(_clickThere)
-        .then(delay(20))
+        .then(delay(timeDelay))
         .then(function() {
             var cameraAfter = gd._fullLayout.scene._scene.glplot.camera;
             expect(cameraAfter.up[0]).toBeCloseTo(0, 2, 'cameraAfter.up[0]');
@@ -129,7 +130,7 @@ describe('Test gl3d before/after plot', function() {
             expect(cameraAfter.mouseListener.enabled === true);
         })
         .then(_clickOtherplace)
-        .then(delay(20))
+        .then(delay(timeDelay))
         .then(function() {
             var cameraFinal = gd._fullLayout.scene._scene.glplot.camera;
             expect(cameraFinal.up[0]).toBeCloseTo(0, 2, 'cameraFinal.up[0]');
