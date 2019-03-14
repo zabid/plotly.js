@@ -708,6 +708,18 @@ module.exports = function(gd, svg, calcData, layout, callbacks) {
         .style('pointer-events', 'auto')
         .attr('transform', sankeyTransform);
 
+    sankey.each(function(d) {
+        // Draw dragbox
+        var el = gd._fullLayout._draggers.append('rect')
+          .style('pointer-events', 'all')
+          .attr('width', d.width)
+          .attr('height', d.height)
+          .attr('x', d.translateX)
+          .attr('y', d.translateY)
+          .style({fill: 'transparent', 'stroke-width': 0});
+        gd._fullLayout._bgRect = el;
+    });
+
     sankey.transition()
         .ease(c.ease).duration(c.duration)
         .attr('transform', sankeyTransform);
