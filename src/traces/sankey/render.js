@@ -708,16 +708,21 @@ module.exports = function(gd, svg, calcData, layout, callbacks) {
         .style('pointer-events', 'auto')
         .attr('transform', sankeyTransform);
 
-    sankey.each(function(d) {
+    sankey.each(function(d, i) {
+        gd._fullData[i]._sankey = d;
+
         // Draw dragbox
-        var el = gd._fullLayout._draggers.append('rect')
-          .style('pointer-events', 'all')
-          .attr('width', d.width)
-          .attr('height', d.height)
-          .attr('x', d.translateX)
-          .attr('y', d.translateY)
-          .style({fill: 'transparent', 'stroke-width': 0});
-        gd._fullLayout._bgRect = el;
+        Lib.ensureSingle(gd._fullLayout._draggers, 'rect', '', function() {
+            var el = gd._fullLayout._draggers.append('rect')
+              .style('pointer-events', 'all')
+              .attr('width', d.width)
+              .attr('height', d.height)
+              .attr('x', d.translateX)
+              .attr('y', d.translateY)
+              .style({fill: 'transparent', 'stroke-width': 0});
+
+            gd._fullLayout._bgRect = el;
+        });
     });
 
     sankey.transition()

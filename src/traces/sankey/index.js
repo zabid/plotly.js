@@ -15,8 +15,8 @@ Plot.supplyDefaults = require('./defaults');
 Plot.calc = require('./calc');
 Plot.plot = require('./plot');
 
-Plot.selectPoints = function(a) {
-    console.log(a);
+Plot.selectPoints = function(a, b, c) {
+    console.log(a, b, c);
 };
 
 Plot.moduleType = 'trace';

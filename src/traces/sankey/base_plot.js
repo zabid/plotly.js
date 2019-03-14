@@ -16,6 +16,8 @@ var fxAttrs = require('../../components/fx/layout_attributes');
 var setCursor = require('../../lib/setcursor');
 var dragElement = require('../../components/dragelement');
 var prepSelect = require('../../plots/cartesian/select').prepSelect;
+var Lib = require('../../lib');
+var Plotly = require('../../plot_api/plot_api');
 
 var SANKEY = 'sankey';
 
@@ -39,6 +41,8 @@ exports.clean = function(newFullData, newFullLayout, oldFullData, oldFullLayout)
     }
 };
 
+var oldDragOptions;
+var dragOptions;
 exports.updateFx = function(gd) {
     var fullLayout = gd._fullLayout;
     var bgRect = fullLayout._bgRect;
@@ -52,18 +56,31 @@ exports.updateFx = function(gd) {
 
     if(dragMode === 'select') {
         fillRangeItems = function(eventData, poly) {
-            var ranges = eventData.range = {};
-            // ranges[_this.id] = [
-            //     invert([poly.xmin, poly.ymin]),
-            //     invert([poly.xmax, poly.ymax])
-            // ];
-            console.log(poly);
+            var oldGroups = gd._fullData[0].node.groups.slice();
+            var nodes = gd._fullData[0]._sankey.graph.nodes;
+            for(var i = 0; i < nodes.length; i++) {
+                var node = nodes[i];
+                if(node.partOfGroup) continue; // Those are invisible
+                var doNotOverlap = poly.xmin > node.x1 || poly.xmax < node.x0 || poly.ymin > node.y1 || poly.ymax < node.y0;
+                if(!doNotOverlap) {
+                    // If the node represents a group
+                    if(node.group) {
+                        // Add all its children to the current selection
+                        for(var j = 0; j < node.childrenNodes.length; j++) {
+                            eventData.points.push(node.childrenNodes[j].pointNumber);
+                        }
+                        // Remove it from the existing list of groups
+                        oldGroups[node.pointNumber - gd._fullData[0].node._count] = false;
+                    } else {
+                        eventData.points.push(node.pointNumber);
+                    }
+                }
+            }
+            var newGroups = oldGroups.filter(function(g) { return g;}).concat([eventData.points]);
+            return Plotly._guiRestyle(gd, 'node.groups', [ newGroups ]).catch(function() {});
         };
     } else if(dragMode === 'lasso') {
-        fillRangeItems = function(eventData, poly, pts) {
-            // var dataPts = eventData.lassoPoints = {};
-            // dataPts[_this.id] = pts.filtered.map(invert);
-        };
+        Lib.warn('Lasso mode is not yet supported.');
     }
 
     var xaxis = {
@@ -81,18 +98,25 @@ exports.updateFx = function(gd) {
 
     // Note: dragOptions is needed to be declared for all dragmodes because
     // it's the object that holds persistent selection state.
-    var dragOptions = {
+    oldDragOptions = dragOptions;
+    dragOptions = Lib.extendDeep(oldDragOptions || {}, {
         gd: gd,
         element: bgRect.node(),
         plotinfo: {
+            id: 'here', // TODO: use uid
             xaxis: xaxis,
             yaxis: yaxis,
             fillRangeItems: fillRangeItems
         },
         // create mock x/y axes for hover routine
         xaxes: [xaxis],
-        yaxes: [yaxis]
-    };
+        yaxes: [yaxis],
+        clickFn: function(numClicks) {
+            if(numClicks === 2) {
+                return Plotly._guiRestyle(gd, 'node.groups', [[[]]]);
+            }
+        }
+    });
 
     dragOptions.prepFn = function(e, startX, startY) {
         prepSelect(e, startX, startY, dragOptions, dragMode);
