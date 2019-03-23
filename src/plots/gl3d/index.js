@@ -70,6 +70,11 @@ exports.plot = function plotGl3d(gd) {
         // save 'initial' camera view settings for modebar button
         if(!scene.viewInitial) {
             scene.viewInitial = {
+                aspect: {
+                    x: sceneLayout.xaxis.aspectratio,
+                    y: sceneLayout.yaxis.aspectratio,
+                    z: sceneLayout.zaxis.aspectratio
+                },
                 up: {
                     x: camera.up.x,
                     y: camera.up.y,

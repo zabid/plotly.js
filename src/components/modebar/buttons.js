@@ -347,6 +347,10 @@ function handleCamera3d(gd, ev) {
         var key = sceneId + '.camera';
         var scene = fullLayout[sceneId]._scene;
 
+        if(attr === 'resetLastSave' || attr === 'resetDefault') {
+            aobj[sceneId + '.aspect'] = [scene.viewInitial.aspect.x, scene.viewInitial.aspect.y, scene.viewInitial.aspect.z];
+        }
+
         if(attr === 'resetLastSave') {
             aobj[key + '.up'] = scene.viewInitial.up;
             aobj[key + '.eye'] = scene.viewInitial.eye;
